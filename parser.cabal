@@ -1,0 +1,26 @@
+cabal-version:      2.4
+name:               parser
+version:            0.1.0.0
+author:             Le0-dot <https://github.com/Le0-dot>
+maintainer:         Le0-dot <https://github.com/Le0-dot>
+synopsis:	    Parser for my toy language
+description:	    Parser for toy language, that produces json, 
+                    that is the only correct input for compiler.
+license:            MIT
+license-file:       LICENSE
+
+executable parser
+    hs-source-dirs:   src
+    main-is:          Main.hs
+    other-modules:    Types
+                    , Lexeme
+                    , Parser
+    other-extensions: OverloadedStrings
+                    , DeriveGeneric
+    build-depends:    base ^>=4.16.4.0
+                    , aeson
+                    , megaparsec
+                    , text
+source-repository head
+    type:                 git
+    location:             https://github.com/Le0-dot/parser
