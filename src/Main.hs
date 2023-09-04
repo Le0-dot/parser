@@ -2,14 +2,14 @@ module Main where
 
 import Text.Megaparsec
 import qualified Data.Text.IO as T
-import Data.Aeson (encodeFile)
+import Data.Aeson.Encode.Pretty (encodePretty)
 import System.Environment (getArgs)
+import qualified Data.ByteString.Lazy as BS
 
 import Types
 import Lexeme
 import Parser
 
--- main function to run parser
 main :: IO ()
 main = do
     [f] <- getArgs
@@ -17,4 +17,4 @@ main = do
     let out = parse (between skipWhiteSpace eof file) f c
     case out of
         Left err -> putStrLn $ errorBundlePretty err
-        Right out -> encodeFile (f ++ ".ast.json") out
+        Right out -> BS.writeFile (f ++ ".ast.json") $ encodePretty out

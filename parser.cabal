@@ -21,6 +21,8 @@ executable parser
                     , aeson
                     , megaparsec
                     , text
+                    , aeson-pretty
+                    , bytestring
 source-repository head
     type:                 git
     location:             https://github.com/Le0-dot/parser
