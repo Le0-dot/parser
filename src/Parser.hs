@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser 
+module Parser
     ( skipWhiteSpace
     , file
     ) where
@@ -14,6 +14,7 @@ import qualified Data.Text as T
 
 import Types
 import Lexeme
+import Data.Maybe (isNothing)
 
 
 skipWhiteSpace :: Parser ()
@@ -39,7 +40,7 @@ function = do
     let functionParam = FuncArg <$> identifier <*> identifier
     void (parseKeyword "func")
     name <- dbg "func name" identifier
-    params <- dbg "funciton parameters" $ parens $ many (functionParam <* commaOrFollowingRP)
+    params <- dbg "funciton parameters" $ parens (functionParam `separatedBy` symbol ",")
     ret <- dbg "fucntion return type" $ optional identifier
     body <- dbg "funciton body" block
     return $ Function name params ret body
@@ -54,8 +55,25 @@ ifBlock = Block <$> (finalSymbol "{" *> many stmt <* symbol "}") <?> "block"
 stmt :: Parser Stmt
 stmt = dbg "stmt" $ parseLine $ label "statement" $ choice
     [ dbg "return" (ReturnStmt <$> (parseKeyword "return" *> expr) <?> "return statement")
+    , dbg "define" (VariableDefinitionStmt <$> (parseKeyword "let" *> varDef `separatedBy` symbol ",") <?> "variable definition statement")
     , dbg "ignore" $ IgnoreResultStmt <$> expr
     ] <* eol
+
+separatedBy :: Parser b -> Parser a -> Parser [b]
+separatedBy parser sepParser = do
+    fst <- parser
+    rest <- many (sepParser *> parser)
+    return $ fst:rest
+
+varDef :: Parser VariableDefinition
+varDef = do
+    variableName <- identifier
+    variableType <- optional identifier
+    variableValue <- case variableType of
+        Just _ -> optional $ symbol "=" *> expr
+        Nothing -> Just <$> (symbol "=" *> expr)
+
+    return $ VariableDefinition variableName variableType variableValue
 
 expr :: Parser Expr
 expr = Expr <$> primary <*> many binoprhs
@@ -74,7 +92,7 @@ binoprhs = dbg "binoprhs" $ BinOpRhs <$> opIdentifier <*> primary
 primaryWithId :: Parser Primary
 primaryWithId = do
     id <- identifier
-    p <- optional $ parens $ many (expr <* commaOrFollowingRP)
+    p <- optional $ parens (expr `separatedBy` symbol ",")
     return $ case p of
         Just exprs -> PrimaryCall $ Call id exprs
         Nothing -> PrimaryId id

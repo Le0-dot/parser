@@ -31,8 +31,8 @@ instance ToJSON Function where
 
 
 data FuncArg = FuncArg
-    { varName :: Identifier
-    , varType :: Type
+    { argName :: Identifier
+    , argType :: Type
     } deriving (Show, Generic)
 
 instance ToJSON FuncArg where
@@ -49,16 +49,23 @@ instance ToJSON Block where
 
 
 data Stmt
-    = ReturnStmt       Expr
-    | IgnoreResultStmt Expr
+    = ReturnStmt             Expr
+    | IgnoreResultStmt       Expr
+    | VariableDefinitionStmt [VariableDefinition]
     deriving (Show, Generic)
 
 instance ToJSON Stmt where
-    toJSON (ReturnStmt e) = object ["return" .= True, "expr" .= e]
-    toJSON (IgnoreResultStmt e) = object ["return" .= False, "expr" .= e]
-    
-    toEncoding (ReturnStmt e) = pairs ("return" .= True <> "expr" .= e )
-    toEncoding (IgnoreResultStmt e) = pairs ("return" .= False <> "expr" .= e )
+    toEncoding = genericToEncoding defaultOptions
+
+
+data VariableDefinition = VariableDefinition
+    { varName  :: Identifier
+    , varType  :: Maybe Identifier
+    , varValue :: Maybe Expr
+    } deriving (Show, Generic)
+
+instance ToJSON VariableDefinition where
+    toEncoding = genericToEncoding defaultOptions
 
 
 data Expr = Expr 

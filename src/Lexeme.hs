@@ -3,7 +3,6 @@
 module Lexeme 
     ( symbol
     , parseKeyword
-    , commaOrFollowingRP
     , identifier
     , opIdentifier
     , parens
@@ -51,10 +50,6 @@ parseKeyword :: T.Text -> Parser ()
 parseKeyword kw = lexeme $ do
     string kw
     notFollowedBy $ alphaNumChar <|> char '_' <|> char '\''
-
--- match ',' and consume or ')' without consuming
-commaOrFollowingRP :: Parser T.Text
-commaOrFollowingRP = symbol "," <|> lookAhead (symbol ")")
 
 -- match identifiers such as [a-zA-Z_][a-zA-Z0-9_]*[']*
 identifier :: Parser Identifier
