@@ -21,7 +21,7 @@ instance ToJSON File where
 
 data Function = Function
     { funcName :: Identifier
-    , funcParams :: [VarDef]
+    , funcParams :: [FuncArg]
     , funcReturn :: Maybe Type
     , funcBody :: Block
     } deriving (Show, Generic)
@@ -30,12 +30,12 @@ instance ToJSON Function where
     toEncoding = genericToEncoding defaultOptions
 
 
-data VarDef = VarDef
+data FuncArg = FuncArg
     { varName :: Identifier
     , varType :: Type
     } deriving (Show, Generic)
 
-instance ToJSON VarDef where
+instance ToJSON FuncArg where
     toEncoding = genericToEncoding defaultOptions
 
 

@@ -36,7 +36,7 @@ file = File <$> many function
 
 function :: Parser Function
 function = do
-    let functionParam = VarDef <$> identifier <*> identifier
+    let functionParam = FuncArg <$> identifier <*> identifier
     void (parseKeyword "func")
     name <- dbg "func name" identifier
     params <- dbg "funciton parameters" $ parens $ many (functionParam <* commaOrFollowingRP)
