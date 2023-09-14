@@ -5,6 +5,7 @@ module Parser
     , file
     ) where
 
+import Data.Maybe
 import Control.Monad
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -14,7 +15,6 @@ import qualified Data.Text as T
 
 import Types
 import Lexeme
-import Data.Maybe (isNothing)
 
 
 skipWhiteSpace :: Parser ()
@@ -48,22 +48,15 @@ function = do
 block :: Parser Block
 block = Block <$> (finalSymbol "{" *> many stmt <* finalSymbol "}") <?> "block"
 
--- not used for now but will be needed with if-else 
-ifBlock :: Parser Block
-ifBlock = Block <$> (finalSymbol "{" *> many stmt <* symbol "}") <?> "block"
-
 stmt :: Parser Stmt
 stmt = dbg "stmt" $ parseLine $ label "statement" $ choice
     [ dbg "return" (ReturnStmt <$> (parseKeyword "return" *> expr) <?> "return statement")
-    , dbg "define" (VariableDefinitionStmt <$> (parseKeyword "let" *> varDef `separatedBy` symbol ",") <?> "variable definition statement")
+    , dbg "define" (VariableDefinitionStmt <$> letStmt <?> "variable definition statement")
     , dbg "ignore" $ IgnoreResultStmt <$> expr
     ] <* eol
 
-separatedBy :: Parser b -> Parser a -> Parser [b]
-separatedBy parser sepParser = do
-    fst <- parser
-    rest <- many (sepParser *> parser)
-    return $ fst:rest
+letStmt :: Parser [VariableDefinition]
+letStmt = parseKeyword "let" *> varDef `separatedBy` symbol "," <?> "let statement"
 
 varDef :: Parser VariableDefinition
 varDef = do
@@ -82,11 +75,12 @@ primary :: Parser Primary
 primary = dbg "primary" $ choice
     [ dbg "parens" $ PrimaryParens <$> parens expr
     , dbg "literal" $ PrimaryLiteral <$> literal
+    , dbg "if" $ PrimaryIf <$> ifExpr
     , dbg "call" primaryWithId
     ]
 
 binoprhs :: Parser BinOpRhs
-binoprhs = dbg "binoprhs" $ BinOpRhs <$> opIdentifier <*> primary
+binoprhs = dbg "binoprhs" $ BinOpRhs <$> opIdentifier <*> dbg "rhs" primary
 
 -- either identifier of call (identifier with expressions in parenthesis)
 primaryWithId :: Parser Primary
@@ -96,3 +90,17 @@ primaryWithId = do
     return $ case p of
         Just exprs -> PrimaryCall $ Call id exprs
         Nothing -> PrimaryId id
+
+ifExpr :: Parser If
+ifExpr = dbg "if expr" $ do
+    parseKeyword "if"
+    var <- optional $ letStmt <* symbol ";"
+    cond <- expr
+    thenBlk <- ifBlock
+    elseBlk <- optional (parseKeyword "else" *> ifBlock)
+
+    return $ If var cond thenBlk elseBlk
+
+-- not used for now but will be needed with if-else 
+ifBlock :: Parser Block
+ifBlock = Block <$> (finalSymbol "{" *> many stmt <* symbol "}") <?> "block"

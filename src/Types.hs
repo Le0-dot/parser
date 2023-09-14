@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types where
 
@@ -68,7 +68,7 @@ instance ToJSON VariableDefinition where
     toEncoding = genericToEncoding defaultOptions
 
 
-data Expr = Expr 
+data Expr = Expr
     { lhs :: Primary
     , rhs :: [BinOpRhs]
     } deriving (Show, Generic)
@@ -82,18 +82,11 @@ data Primary
     | PrimaryLiteral Literal
     | PrimaryParens  Expr
     | PrimaryCall    Call
+    | PrimaryIf      If
     deriving (Show, Generic)
 
 instance ToJSON Primary where
-    toJSON (PrimaryId i) = object ["type" .= ("id" :: String), "val" .= i]
-    toJSON (PrimaryLiteral l) = object ["type" .= ("literal" :: String), "val" .= l]
-    toJSON (PrimaryParens p) = object ["type" .= ("parens" :: String), "val" .= p]
-    toJSON (PrimaryCall c) = object ["type" .= ("call" :: String), "val" .= c]
-
-    toEncoding (PrimaryId i) = pairs ("type" .= ("id" :: String) <> "val" .= i)
-    toEncoding (PrimaryLiteral l) = pairs ("type" .= ("literal" :: String) <> "val" .= l)
-    toEncoding (PrimaryParens p) = pairs ("type" .= ("parens" :: String) <> "val" .= p)
-    toEncoding (PrimaryCall c) = pairs ("type" .= ("call" :: String) <> "val" .= c)
+    toEncoding = genericToEncoding defaultOptions
 
 
 data BinOpRhs = BinOpRhs
@@ -135,4 +128,15 @@ data Call = Call
     } deriving (Show, Generic)
 
 instance ToJSON Call where
+    toEncoding = genericToEncoding defaultOptions
+
+
+data If = If
+    { ifScopeVar :: Maybe [VariableDefinition]
+    , cond       :: Expr
+    , thenBlock  :: Block
+    , elseBlock  :: Maybe Block
+    } deriving (Show, Generic)
+
+instance ToJSON If where
     toEncoding = genericToEncoding defaultOptions
