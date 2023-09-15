@@ -52,6 +52,7 @@ data Stmt
     = ReturnStmt             Expr
     | IgnoreResultStmt       Expr
     | VariableDefinitionStmt [VariableDefinition]
+    | IfStmt                 If
     deriving (Show, Generic)
 
 instance ToJSON Stmt where

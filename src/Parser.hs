@@ -52,6 +52,7 @@ stmt :: Parser Stmt
 stmt = dbg "stmt" $ parseLine $ label "statement" $ choice
     [ dbg "return" (ReturnStmt <$> (parseKeyword "return" *> expr) <?> "return statement")
     , dbg "define" (VariableDefinitionStmt <$> letStmt <?> "variable definition statement")
+    , dbg "if stmt" $ IfStmt <$> ifExpr
     , dbg "ignore" $ IgnoreResultStmt <$> expr
     ] <* eol
 
