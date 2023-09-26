@@ -53,6 +53,7 @@ data Stmt
     | IgnoreResultStmt       Expr
     | VariableDefinitionStmt [VariableDefinition]
     | IfStmt                 If
+    | LoopStmt               Loop
     deriving (Show, Generic)
 
 instance ToJSON Stmt where
@@ -134,10 +135,21 @@ instance ToJSON Call where
 
 data If = If
     { ifScopeVar :: Maybe [VariableDefinition]
-    , cond       :: Expr
+    , ifCond     :: Expr
     , thenBlock  :: Block
     , elseBlock  :: Maybe Block
     } deriving (Show, Generic)
 
 instance ToJSON If where
+    toEncoding = genericToEncoding defaultOptions
+
+
+data Loop = Loop
+    { loopScopeVar :: Maybe [VariableDefinition]
+    , loopCond     :: Maybe Expr
+    , loopPostIter :: Maybe Expr
+    , loopBody     :: Block
+    } deriving (Show, Generic)
+
+instance ToJSON Loop where
     toEncoding = genericToEncoding defaultOptions

@@ -42,17 +42,18 @@ function = do
     name <- dbg "func name" identifier
     params <- dbg "funciton parameters" $ parens (functionParam `separatedBy` symbol ",")
     ret <- dbg "fucntion return type" $ optional identifier
-    body <- dbg "funciton body" block
+    body <- dbg "funciton body" block <* eol
     return $ Function name params ret body
 
 block :: Parser Block
-block = Block <$> (finalSymbol "{" *> many stmt <* finalSymbol "}") <?> "block"
+block = Block <$> (finalSymbol "{" *> many stmt <* symbol "}") <?> "block"
 
 stmt :: Parser Stmt
 stmt = dbg "stmt" $ parseLine $ label "statement" $ choice
     [ dbg "return" (ReturnStmt <$> (parseKeyword "return" *> expr) <?> "return statement")
     , dbg "define" (VariableDefinitionStmt <$> letStmt <?> "variable definition statement")
     , dbg "if stmt" $ IfStmt <$> ifExpr
+    , dbg "loop stmt" $ LoopStmt <$> loopStmt
     , dbg "ignore" $ IgnoreResultStmt <$> expr
     ] <* eol
 
@@ -97,11 +98,18 @@ ifExpr = dbg "if expr" $ do
     parseKeyword "if"
     var <- optional $ letStmt <* symbol ";"
     cond <- expr
-    thenBlk <- ifBlock
-    elseBlk <- optional (parseKeyword "else" *> ifBlock)
+    thenBlk <- block
+    elseBlk <- optional (parseKeyword "else" *> block)
 
     return $ If var cond thenBlk elseBlk
 
--- not used for now but will be needed with if-else 
-ifBlock :: Parser Block
-ifBlock = Block <$> (finalSymbol "{" *> many stmt <* symbol "}") <?> "block"
+loopStmt :: Parser Loop
+loopStmt = dbg "loop" $ do
+    parseKeyword "loop"
+    var <- optional $ letStmt <* symbol ";"
+    cond <- optional expr
+    postIter <- optional $ symbol ";" *> expr
+    body <- block
+
+    return $ Loop var cond postIter body
+
