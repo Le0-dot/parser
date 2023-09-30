@@ -31,10 +31,7 @@ textToInt :: T.Text -> Int
 textToInt = T.foldl (\acc c -> acc * 10 + digitToInt c) 0
 
 separatedBy :: Parser b -> Parser a -> Parser [b]
-separatedBy parser sepParser = do
-    fst <- parser
-    rest <- many (sepParser *> parser)
-    return $ fst:rest
+separatedBy parser sepParser = ((:) <$> parser <*> many (sepParser *> parser)) <|> return []
 
 -- define parser for skipping spaces and comments
 skipSpace :: Parser ()
